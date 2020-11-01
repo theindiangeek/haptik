@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+  labels:
+    app: javaweb
+  name: javaweb
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 2
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: javaweb
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: javaweb
+    spec:
+      initContainers:
+      - image: resouer/sample:v2
+        name: war
+        command:
+        - "cp"
+        - "/sample.war"
+        - "/app"
+        volumeMounts:
+        - mountPath: /app
+          name: app-volume
+      containers:
+      - image: resouer/mytomcat:7.0
+        name: tomcat
+        command: ["sh","-c","/root/apache-tomcat-7.0.42-v2/bin/start.sh"]
+        volumeMounts:
+        - mountPath: /root/apache-tomcat-7.0.42-v2/webapps
+          name: app-volume
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /sample/index.html
+            port: 8080
+            scheme: HTTP
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /sample/index.html
+            port: 8080
+            scheme: HTTP
+      volumes:
+      - name: app-volume
+        emptyDir: {}
