@@ -1,6 +1,9 @@
 Some points to keep in mind: I have not used ingress controllers in the light of short time available.
 	I have port forwarded and tested my apps.
 
+Just use the init.sh script to bootstrap the while cluster from scratch
+
+Steps that the automation follows are as follows:
 Step 1: create infra using terraform from the terraform folder.
 	Structure: 
 		3 master nodes in private subnet each in different AZ for HA.
