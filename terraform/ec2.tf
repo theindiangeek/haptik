@@ -24,7 +24,7 @@ most_recent       = true
 locals {
   instance-userdata = <<EOF
 #!/bin/bash
-cat <<REPO > /etc/yum.repos.d/kubernetes.repo
+sudo cat <<REPO > /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
 name=Kubernetes
 baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
@@ -34,20 +34,20 @@ repo_gpgcheck=1
 gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 REPO
 
-yum install docker kubelet-1.16.15 kubectl-1.16.15 kubeadm-1.16.15 -y --nogpgcheck
+sudo yum install docker kubelet-1.16.15 kubectl-1.16.15 kubeadm-1.16.15 -y --nogpgcheck
 
-modprobe br_netfilter
-swapoff -a
+sudo modprobe br_netfilter
+sudo swapoff -a
 
 echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.conf
 echo net.bridge.bridge-nf-call-ip6tables = 1 >> /etc/sysctl.conf
 echo net.bridge.bridge-nf-call-iptables = 1 >> /etc/sysctl.conf
 echo net.ipv4.ip_forward = 1 >> /etc/sysctl.conf
-modprobe br_netfilter
+sudo modprobe br_netfilter
 
-sysctl -p
+sudo sysctl -p
 
-service docker start
+sudo service docker start
 EOF
 }
 
@@ -59,6 +59,7 @@ resource "aws_instance" "master-1a" {
   vpc_security_group_ids = ["${aws_security_group.k8s.id}"]
   key_name = "${aws_key_pair.key.id}"
   user_data_base64 = "${base64encode(local.instance-userdata)}"
+  depends_on = ["aws_route_table_association.rta-1a", "aws_route_table_association.rta-1a", "aws_route_table_association.rta-1c"]
   tags = {
     Name = "master-1a"
   }
@@ -71,6 +72,7 @@ resource "aws_instance" "master-1b" {
   vpc_security_group_ids = ["${aws_security_group.k8s.id}"]
   key_name = "${aws_key_pair.key.id}"
   user_data_base64 = "${base64encode(local.instance-userdata)}"
+  depends_on = ["aws_route_table_association.rta-1a", "aws_route_table_association.rta-1a", "aws_route_table_association.rta-1c"]
   tags = {
     Name = "master-1b"
   }
@@ -83,6 +85,7 @@ resource "aws_instance" "master-1c" {
   vpc_security_group_ids = ["${aws_security_group.k8s.id}"]
   key_name = "${aws_key_pair.key.id}"
   user_data_base64 = "${base64encode(local.instance-userdata)}"
+  depends_on = ["aws_route_table_association.rta-1a", "aws_route_table_association.rta-1a", "aws_route_table_association.rta-1c"]
   tags = {
     Name = "master-1c"
   }
@@ -95,6 +98,7 @@ resource "aws_instance" "worker" {
   vpc_security_group_ids = ["${aws_security_group.k8s.id}"]
   key_name = "${aws_key_pair.key.id}"
   user_data_base64 = "${base64encode(local.instance-userdata)}"
+  depends_on = ["aws_route_table_association.rta-1a", "aws_route_table_association.rta-1a", "aws_route_table_association.rta-1c"]
   tags = {
     Name = "worker"
   }
