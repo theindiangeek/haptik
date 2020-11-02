@@ -28,9 +28,9 @@ echo $BASTION >> ../ansible/hosts
 echo >> ../ansible/hosts
 echo "[master:vars]" >> ../ansible/hosts
 echo ELB_ENDPOINT=$ELB >> ../ansible/hosts
-echo ansible_ssh_common_args=-o ProxyCommand=\"ssh -A -W %h:%p ec2-user@$BASTION\" -o StrictHostKeyChecking=no >> ../ansible/hosts
+echo ansible_ssh_common_args=-o ProxyCommand=\"ssh -A -W %h:%p ec2-user@$BASTION -o StrictHostKeyChecking=no\" -o StrictHostKeyChecking=no >> ../ansible/hosts
 
 echo >> ../ansible/hosts
 echo "[worker:vars]" >> ../ansible/hosts
 echo ELB_ENDPOINT=$ELB >> ../ansible/hosts
-echo ansible_ssh_common_args=-o ProxyCommand=\"ssh -A -W %h:%p ec2-user@$BASTION\" -o StrictHostKeyChecking=no >> ../ansible/hosts
+echo ansible_ssh_common_args=-o ProxyCommand=\"ssh -A -W %h:%p ec2-user@$BASTION -o StrictHostKeyChecking=no\" -o StrictHostKeyChecking=no >> ../ansible/hosts

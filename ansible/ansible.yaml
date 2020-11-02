@@ -95,7 +95,7 @@
     shell: "curl https://get.helm.sh/helm-v2.12.3-darwin-amd64.tar.gz -o ../helm.tar.gz && tar -xvzf ../helm.tar.gz -C ../ && mv ../darwin-amd64/helm ../. && chmod +x ../helm"
 
   - name: Create calico network
-    shell: "../kubectl apply -f ../calico.yaml; echo $PATH"
+    shell: "../kubectl apply -f ../calico.yaml; ../kubectl apply -f ../calico.yaml"
     environment:
       KUBECONFIG: ../KUBECONFIG
       PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
@@ -104,7 +104,7 @@
       var: shell_result.stdout_lines
 
   - name: 'Helm init'
-    shell: 'helm init'
+    shell: "helm init --service-account tiller --override spec.selector.matchLabels.'name'='tiller',spec.selector.matchLabels.'app'='helm' --output yaml | sed 's@apiVersion: extensions/v1beta1@apiVersion: apps/v1@' | sed 's/serviceAccountName: tiller/serviceAccountName: default/' | kubectl apply -f -"
     environment:
       KUBECONFIG: ../KUBECONFIG
       PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
@@ -201,6 +201,14 @@
     register: shell_result
   - debug:
       var: shell_result.stdout_lines
+
+  - name: Enable port forward to grafana pod
+    shell: "kubectl port-forward $(kubectl get pods -lapp.kubernetes.io/name=grafana -n monitoring | awk '{print $1}' | tail -n1) -n monitoring 3000:3000"
+    environment:
+      KUBECONFIG: ../KUBECONFIG
+      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
+    async: 2592000
+    poll: 0
 
   - name: 'Create monitoring dashboard in grafana'
     uri:
