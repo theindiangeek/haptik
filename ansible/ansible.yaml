@@ -3,55 +3,55 @@
   hosts: master
   gather_facts: true
   tasks:
-#  - name: Enable docker
-#    become: true
-#    become_user: root
-#    service:
-#      name: docker
-#      enabled: yes
-#
-#  - name: kubeadm init
-#    shell: "kubeadm init --control-plane-endpoint {{ ELB_ENDPOINT }}:6443 --upload-certs --pod-network-cidr=10.96.0.0/12 | grep -m 1 -A3 \"kubeadm join\""
-#    #shell: "hostname -I"
-#    #register: shell_result
-#    when: ansible_host == hostvars.master0.ansible_host
-#    become: true
-#    become_user: root
-#    register: kubeadm_join_cmd
-#    #delegate_to: "{{ groups['master'][0] }}"
-#
-#  - set_fact:
-#      kubeadm_join: "{{ kubeadm_join_cmd.stdout }}"
-#    when: ansible_host == hostvars.master0.ansible_host
-#
-#  - debug: var=kubeadm_join
-#  - name: see hostvars for master0
-#    shell: "echo {{ hostvars['master0']['kubeadm_join'] }}"
-#
-##  - name: Store join command
-##    action: copy content="{{ kubeadm_join }}" dest="/opt/kubeadm-join.command"
-#
-#  - name: Run kubeadm join
-#    shell: "{{ hostvars['master0']['kubeadm_join'] }}"
-#    #shell: "echo {{ ansible_host}}"
-#    register: shell_result
-#    become: true
-#    become_user: root
-#    when: ansible_host != hostvars.master0.ansible_host
-#  - debug:
-#      var: shell_result.stdout_lines
-#
-#  - name: Make kubeconfig directories
-#    shell: "mkdir -p $HOME/.kube; sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config; sudo chown $(id -u):$(id -g) $HOME/.kube/config"
-#
-#  - name: Get kubeconfig file
-#    become: true
-#    become_user: root
-#    when: ansible_host != hostvars.master0.ansible_host
-#    fetch:
-#      src: /etc/kubernetes/admin.conf
-#      dest: ../KUBECONFIG
-#      flat: yes
+  - name: Enable docker
+    become: true
+    become_user: root
+    service:
+      name: docker
+      enabled: yes
+
+  - name: kubeadm init
+    shell: "kubeadm init --control-plane-endpoint {{ ELB_ENDPOINT }}:6443 --upload-certs --pod-network-cidr=10.96.0.0/12 | grep -m 1 -A3 \"kubeadm join\""
+    #shell: "hostname -I"
+    #register: shell_result
+    when: ansible_host == hostvars.master0.ansible_host
+    become: true
+    become_user: root
+    register: kubeadm_join_cmd
+    #delegate_to: "{{ groups['master'][0] }}"
+
+  - set_fact:
+      kubeadm_join: "{{ kubeadm_join_cmd.stdout }}"
+    when: ansible_host == hostvars.master0.ansible_host
+
+  - debug: var=kubeadm_join
+  - name: see hostvars for master0
+    shell: "echo {{ hostvars['master0']['kubeadm_join'] }}"
+
+#  - name: Store join command
+#    action: copy content="{{ kubeadm_join }}" dest="/opt/kubeadm-join.command"
+
+  - name: Run kubeadm join
+    shell: "{{ hostvars['master0']['kubeadm_join'] }}"
+    #shell: "echo {{ ansible_host}}"
+    register: shell_result
+    become: true
+    become_user: root
+    when: ansible_host != hostvars.master0.ansible_host
+  - debug:
+      var: shell_result.stdout_lines
+
+  - name: Make kubeconfig directories
+    shell: "mkdir -p $HOME/.kube; sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config; sudo chown $(id -u):$(id -g) $HOME/.kube/config"
+
+  - name: Get kubeconfig file
+    become: true
+    become_user: root
+    when: ansible_host != hostvars.master0.ansible_host
+    fetch:
+      src: /etc/kubernetes/admin.conf
+      dest: ../KUBECONFIG
+      flat: yes
 
   - name: Get worker join token
     become: true
@@ -73,13 +73,13 @@
   - set_fact:
       kubeadm_join_worker: "{{ hostvars['master0']['kubeadm_join_worker_cmd'] }}"
 
-#  - name: Bootstrap worker
-#    shell: "bash -c \"{{ hostvars['worker0']['kubeadm_join_worker']['stdout'] }}\""
-#    become: true
-#    become_user: root
-#    register: shell_result
-#  - debug:
-#      var: shell_result.stdout_lines
+  - name: Bootstrap worker
+    shell: "bash -c \"{{ hostvars['worker0']['kubeadm_join_worker']['stdout'] }}\""
+    become: true
+    become_user: root
+    register: shell_result
+  - debug:
+      var: shell_result.stdout_lines
 
 - name: Post cluster creation steps
   hosts: localhost
@@ -88,12 +88,12 @@
   - name: export kubeconfig
     shell: 'export KUBECONFIG=../KUBECONFIG; alias k=../kubectl'
 
-#  - name: Download kubectl 1.16.15
-#    shell: "curl -L https://storage.googleapis.com/kubernetes-release/release/v1.16.15/bin/darwin/amd64/kubectl -o ../kubectl && chmod +x ../kubectl"
-#
-#  - name: Download Helm 2.12.3
-#    shell: "curl https://get.helm.sh/helm-v2.12.3-darwin-amd64.tar.gz -o ../helm.tar.gz && tar -xvzf ../helm.tar.gz -C ../ && mv ../darwin-amd64/helm ../. && chmod +x ../helm"
-#
+  - name: Download kubectl 1.16.15
+    shell: "curl -L https://storage.googleapis.com/kubernetes-release/release/v1.16.15/bin/darwin/amd64/kubectl -o ../kubectl && chmod +x ../kubectl"
+
+  - name: Download Helm 2.12.3
+    shell: "curl https://get.helm.sh/helm-v2.12.3-darwin-amd64.tar.gz -o ../helm.tar.gz && tar -xvzf ../helm.tar.gz -C ../ && mv ../darwin-amd64/helm ../. && chmod +x ../helm"
+
   - name: Create calico network
     shell: "../kubectl apply -f ../calico.yaml; echo $PATH"
     environment:
@@ -102,15 +102,15 @@
     register: shell_result
   - debug:
       var: shell_result.stdout_lines
-#
-#  - name: 'Helm init'
-#    shell: 'helm init'
-#    environment:
-#      KUBECONFIG: ../KUBECONFIG
-#      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
-#    register: shell_result
-#  - debug:
-#      var: shell_result.stdout_lines
+
+  - name: 'Helm init'
+    shell: 'helm init'
+    environment:
+      KUBECONFIG: ../KUBECONFIG
+      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
+    register: shell_result
+  - debug:
+      var: shell_result.stdout_lines
 
   - name: 'Wait until tiller becomes ready'
     shell: "../kubectl wait --for=condition=Ready pods -l app=helm -l name=tiller --timeout=600s -n kube-system"
@@ -168,39 +168,39 @@
       var: shell_result.stdout_lines
 
 
-#  - name: Deploy elasticsearch, kibana, metricbeat and filebeat
-#    shell: |
-#      helm repo add elastic https://helm.elastic.co
-#      helm repo update
-#      helm search hub elasticsearch
-#      helm install --name=elasticsearch elastic/elasticsearch
-#      helm install --name=filebeat elastic/filebeat
-#      helm install --name=kibana elastic/kibana
-#      helm install --name=metricbeat elastic/metricbeat
-#    environment:
-#      KUBECONFIG: ../KUBECONFIG
-#      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
-#    register: shell_result
-#  - debug:
-#      var: shell_result.stdout_lines
-#
-#  - name: 'Create jenkins NS'
-#    shell: '../kubectl create ns jenkins'
-#    environment:
-#      KUBECONFIG: ../KUBECONFIG
-#      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
-#    register: shell_result
-#  - debug:
-#      var: shell_result.stdout_lines
-#
-#  - name: 'Deploy jenkins'
-#    shell: '../kubectl run jenkins --image=jenkins/jenkins:lts --restart=Never --namespace=jenkins'
-#    environment:
-#      KUBECONFIG: ../KUBECONFIG
-#      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
-#    register: shell_result
-#  - debug:
-#      var: shell_result.stdout_lines
+  - name: Deploy elasticsearch, kibana, metricbeat and filebeat
+    shell: |
+      helm repo add elastic https://helm.elastic.co
+      helm repo update
+      helm search hub elasticsearch
+      helm install --name=elasticsearch elastic/elasticsearch
+      helm install --name=filebeat elastic/filebeat
+      helm install --name=kibana elastic/kibana
+      helm install --name=metricbeat elastic/metricbeat
+    environment:
+      KUBECONFIG: ../KUBECONFIG
+      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
+    register: shell_result
+  - debug:
+      var: shell_result.stdout_lines
+
+  - name: 'Create jenkins NS'
+    shell: '../kubectl create ns jenkins'
+    environment:
+      KUBECONFIG: ../KUBECONFIG
+      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
+    register: shell_result
+  - debug:
+      var: shell_result.stdout_lines
+
+  - name: 'Deploy jenkins'
+    shell: '../kubectl run jenkins --image=jenkins/jenkins:lts --restart=Never --namespace=jenkins'
+    environment:
+      KUBECONFIG: ../KUBECONFIG
+      PATH: "{{ playbook_dir }}/../:{{ ansible_env.PATH }}"
+    register: shell_result
+  - debug:
+      var: shell_result.stdout_lines
 
   - name: 'Create monitoring dashboard in grafana'
     uri:
