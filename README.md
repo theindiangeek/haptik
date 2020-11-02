@@ -61,5 +61,13 @@ Step 8: Install prometheus
 	This will create prometheus, grafana and alertmanager in the monitoring namespace.
 	Relevant prometheus configurations for monitoring our deployed service is already there in the values.yaml for the chart.
 
-Step 9. Post the deployment, we will create the graph on grafana for out deployed app using the curl command in the ansible playbook.
+Step 9. The ELK stack is deployed using helm chart and logs are sent to elasticsearch for the metrics of the nodes.
+
+Step 10. Post the deployment, we will create the graph on grafana for out deployed app using the curl command in the ansible playbook.
 	By default the default credentials for grafana are admin/prom-operator when deployed via helm charts.
+	port forwarding command: k port-forward $(kubectl get pods -lapp.kubernetes.io/name=grafana -n monitoring | awk '{print $1}' | tail -n1) -n monitoring 3000:3000
+
+	For monitoring, I have monitored the following metrics, since these are responsible for all downtimes regarding nodes:
+		1. Node io load
+		2. Pod cpu load
+		3. Network load
